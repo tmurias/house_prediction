@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -12,77 +13,88 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
 
-# Read training data, deal with all "NA" values appropriately
-housing = pd.read_csv("data/train.csv")
-housing = housing.fillna(0)
-housing["Alley"] = housing["Alley"].replace([0], "None")
-housing["MasVnrType"] = housing["MasVnrType"].replace([0], "None")
-housing["BsmtExposure"] = housing["BsmtExposure"].replace([0], "None")
-housing["BsmtFinType1"] = housing["BsmtFinType1"].replace([0], "None")
-housing["BsmtFinType2"] = housing["BsmtFinType2"].replace([0], "None")
-housing["Electrical"] = housing["Electrical"].replace([0], "None")
-housing["GarageType"] = housing["Electrical"].replace([0], "None")
-housing["MiscFeature"] = housing["MiscFeature"].replace([0], "None")
+def fix_na_values(housing):
+    h = housing.copy()
+    h = h.fillna(0)
+    h["Alley"] = h["Alley"].replace([0], "None")
+    h["MasVnrType"] = h["MasVnrType"].replace([0], "None")
+    h["BsmtExposure"] = h["BsmtExposure"].replace([0], "None")
+    h["BsmtFinType1"] = h["BsmtFinType1"].replace([0], "None")
+    h["BsmtFinType2"] = h["BsmtFinType2"].replace([0], "None")
+    h["Electrical"] = h["Electrical"].replace([0], "None")
+    h["GarageType"] = h["Electrical"].replace([0], "None")
+    h["MiscFeature"] = h["MiscFeature"].replace([0], "None")
+    return h
 
-# Change ordinal categories to numbers
-housing["ExterQual"] = housing["ExterQual"].replace(["Ex"], 5)\
-                                           .replace(["Gd"], 4)\
-                                           .replace(["TA"], 3)\
-                                           .replace(["Fa"], 2)\
-                                           .replace(["Po"], 1)
-housing["ExterCond"] = housing["ExterCond"].replace(["Ex"], 5)\
-                                           .replace(["Gd"], 4)\
-                                           .replace(["TA"], 3)\
-                                           .replace(["Fa"], 2)\
-                                           .replace(["Po"], 1)
-housing["BsmtQual"] = housing["BsmtQual"].replace(["Ex"], 5)\
-                                         .replace(["Gd"], 4)\
-                                         .replace(["TA"], 3)\
-                                         .replace(["Fa"], 2)\
-                                         .replace(["Po"], 1)
-housing["BsmtCond"] = housing["BsmtCond"].replace(["Ex"], 5)\
-                                         .replace(["Gd"], 4)\
-                                         .replace(["TA"], 3)\
-                                         .replace(["Fa"], 2)\
-                                         .replace(["Po"], 1)
-housing["HeatingQC"] = housing["HeatingQC"].replace(["Ex"], 5)\
-                                           .replace(["Gd"], 4)\
-                                           .replace(["TA"], 3)\
-                                           .replace(["Fa"], 2)\
-                                           .replace(["Po"], 1)
-housing["CentralAir"] = housing["CentralAir"].replace(["N"], 0)\
-                                             .replace(["Y"], 1)
-housing["KitchenQual"] = housing["KitchenQual"].replace(["Ex"], 5)\
+def quantify_ordinals(housing):
+    h = housing.copy()
+    h["ExterQual"] = h["ExterQual"].replace(["Ex"], 5)\
                                                .replace(["Gd"], 4)\
                                                .replace(["TA"], 3)\
                                                .replace(["Fa"], 2)\
                                                .replace(["Po"], 1)
-housing["FireplaceQu"] = housing["FireplaceQu"].replace(["Ex"], 5)\
+    h["ExterCond"] = h["ExterCond"].replace(["Ex"], 5)\
                                                .replace(["Gd"], 4)\
                                                .replace(["TA"], 3)\
                                                .replace(["Fa"], 2)\
                                                .replace(["Po"], 1)
-housing["GarageFinish"] = housing["GarageFinish"].replace(["Fin"], 3)\
-                                                 .replace(["RFn"], 2)\
-                                                 .replace(["Unf"], 1)
-housing["GarageQual"] = housing["GarageQual"].replace(["Ex"], 5)\
+    h["BsmtQual"] = h["BsmtQual"].replace(["Ex"], 5)\
                                              .replace(["Gd"], 4)\
                                              .replace(["TA"], 3)\
                                              .replace(["Fa"], 2)\
                                              .replace(["Po"], 1)
-housing["GarageCond"] = housing["GarageCond"].replace(["Ex"], 5)\
-                                             .replace(["Gd"], 4)\
-                                             .replace(["TA"], 3)\
-                                             .replace(["Fa"], 2)\
-                                             .replace(["Po"], 1)
-housing["PavedDrive"] = housing["PavedDrive"].replace(["Y"], 3)\
-                                             .replace(["P"], 2)\
-                                             .replace(["N"], 1)
-housing["PoolQC"] = housing["PoolQC"].replace(["Ex"], 5)\
+    h["BsmtCond"] = h["BsmtCond"].replace(["Ex"], 5)\
+                                 .replace(["Gd"], 4)\
+                                 .replace(["TA"], 3)\
+                                 .replace(["Fa"], 2)\
+                                 .replace(["Po"], 1)
+    h["HeatingQC"] = h["HeatingQC"].replace(["Ex"], 5)\
+                                   .replace(["Gd"], 4)\
+                                   .replace(["TA"], 3)\
+                                   .replace(["Fa"], 2)\
+                                   .replace(["Po"], 1)
+    h["CentralAir"] = h["CentralAir"].replace(["N"], 0)\
+                                     .replace(["Y"], 1)
+    h["KitchenQual"] = h["KitchenQual"].replace(["Ex"], 5)\
+                                       .replace(["Gd"], 4)\
+                                       .replace(["TA"], 3)\
+                                       .replace(["Fa"], 2)\
+                                       .replace(["Po"], 1)
+    h["FireplaceQu"] = h["FireplaceQu"].replace(["Ex"], 5)\
+                                       .replace(["Gd"], 4)\
+                                       .replace(["TA"], 3)\
+                                       .replace(["Fa"], 2)\
+                                       .replace(["Po"], 1)
+    h["GarageFinish"] = h["GarageFinish"].replace(["Fin"], 3)\
+                                         .replace(["RFn"], 2)\
+                                         .replace(["Unf"], 1)
+    h["GarageQual"] = h["GarageQual"].replace(["Ex"], 5)\
                                      .replace(["Gd"], 4)\
                                      .replace(["TA"], 3)\
                                      .replace(["Fa"], 2)\
                                      .replace(["Po"], 1)
+    h["GarageCond"] = h["GarageCond"].replace(["Ex"], 5)\
+                                     .replace(["Gd"], 4)\
+                                     .replace(["TA"], 3)\
+                                     .replace(["Fa"], 2)\
+                                     .replace(["Po"], 1)
+    h["PavedDrive"] = h["PavedDrive"].replace(["Y"], 3)\
+                                     .replace(["P"], 2)\
+                                     .replace(["N"], 1)
+    h["PoolQC"] = h["PoolQC"].replace(["Ex"], 5)\
+                             .replace(["Gd"], 4)\
+                             .replace(["TA"], 3)\
+                             .replace(["Fa"], 2)\
+                             .replace(["Po"], 1)
+    return h
+
+
+# Read training data, deal with all "NA" values appropriately
+housing = pd.read_csv("data/train.csv")
+housing = fix_na_values(housing)
+
+# Change ordinal categories to numbers
+housing = quantify_ordinals(housing)
 
 # Break into training/validation
 train_set, valid_set = train_test_split(housing, test_size=0.2, random_state=69420)
@@ -176,7 +188,7 @@ valid_labels = valid_set["SalePrice"].copy()
 num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
                          ("std_scaler", StandardScaler())])
 cat_pipeline = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
-                         ("encoder", OneHotEncoder())])
+                         ("encoder", OneHotEncoder(handle_unknown="ignore"))])
 full_pipeline = ColumnTransformer([("num", num_pipeline, num_attrs + ord_attrs),
                                    ("cat", cat_pipeline, cat_attrs)])
 full_pipeline.fit_transform(housing_data)
@@ -198,6 +210,20 @@ for i in range(len(predictions)):
 # Evaluate root-mean-squared-log-error
 lin_msle = mean_squared_log_error(valid_labels, predictions)
 lin_rmsle = np.sqrt(lin_msle)
-print("RMSLE: ", lin_rmsle)
+print("RMSLE for validation data: ", lin_rmsle)
 
-# TODO: Run on test data, generate output csv file
+# Load and transform the test data
+test_housing = pd.read_csv("data/test.csv")
+test_housing = fix_na_values(test_housing)
+test_housing = quantify_ordinals(test_housing)
+test_data = test_housing[all_attrs].copy()
+test_data_prepared = full_pipeline.transform(test_data)
+predictions = forest_reg.predict(test_data_prepared)
+with open("data/output.csv", "w", newline='') as output_file:
+    csv_writer = csv.writer(output_file, delimiter=",")
+    csv_writer.writerow(["Id", "SalePrice"])
+    house_id = 1461
+    for p in predictions:
+        row = [house_id, float(p)]
+        csv_writer.writerow(row)
+        house_id += 1
