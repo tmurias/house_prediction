@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
+
 # Read training data, deal with all "NA" values appropriately
 housing = pd.read_csv("data/train.csv")
 housing = housing.fillna(0)
@@ -169,6 +170,8 @@ train_labels = train_set["SalePrice"].copy()
 valid_data = valid_set[all_attrs].copy()
 valid_labels = valid_set["SalePrice"].copy()
 
+# TODO: Add class for combining square-footage attributes
+
 # Apply transformation pipelines
 num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
                          ("std_scaler", StandardScaler())])
@@ -196,3 +199,5 @@ for i in range(len(predictions)):
 lin_msle = mean_squared_log_error(valid_labels, predictions)
 lin_rmsle = np.sqrt(lin_msle)
 print("RMSLE: ", lin_rmsle)
+
+# TODO: Run on test data, generate output csv file
