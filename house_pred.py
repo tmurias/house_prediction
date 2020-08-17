@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.base import BaseEstimator, TransformerMixin
 
 # Read training data, deal with all "NA" values appropriately
 housing = pd.read_csv("data/train.csv")
@@ -170,7 +170,32 @@ train_labels = train_set["SalePrice"].copy()
 valid_data = valid_set[all_attrs].copy()
 valid_labels = valid_set["SalePrice"].copy()
 
-# TODO: Add class for combining square-footage attributes
+class CombineAttribute (BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        pass
+    def fit(self, X, y = None):
+        return self
+    def transform(self, X, y = None):
+        total_sqft = X[:,2] + X[:,6] + X[:,10] + X[:,20] + X[:,21] + X[:,22] + X[:,23] + X[:,24] + X[:,25] + X[:,26]
+        X_cp = X.copy()
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 1, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        X_cp = np.delete(X_cp, 10, 1)
+        return np.c_[X_cp, total_sqft]
 
 # Apply transformation pipelines
 num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
