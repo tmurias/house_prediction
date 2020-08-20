@@ -1,7 +1,11 @@
 import csv
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
@@ -11,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
 from sklearn.base import BaseEstimator, TransformerMixin
 
 def fix_na_values(housing):
@@ -177,6 +182,7 @@ all_attrs = num_attrs + ord_attrs + cat_attrs
 
 # Break datasets into data and labels
 housing_data = housing[all_attrs].copy()
+housing_labels = housing["SalePrice"].copy()
 train_data = train_set[all_attrs].copy()
 train_labels = train_set["SalePrice"].copy()
 valid_data = valid_set[all_attrs].copy()
@@ -210,45 +216,50 @@ class CombineAttribute (BaseEstimator, TransformerMixin):
         return np.c_[X_cp, total_sqft]
 
 # Apply transformation pipelines
-num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
-                         ("std_scaler", StandardScaler())])
+num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median"))])
 cat_pipeline = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
                          ("encoder", OneHotEncoder(handle_unknown="ignore"))])
 full_pipeline = ColumnTransformer([("num", num_pipeline, num_attrs + ord_attrs),
                                    ("cat", cat_pipeline, cat_attrs)])
-full_pipeline.fit_transform(housing_data)
+full_data_prepared = full_pipeline.fit_transform(housing_data)
 train_data_prepared = full_pipeline.transform(train_data)
 valid_data_prepared = full_pipeline.transform(valid_data)
 
 # Train a random forest
-forest_reg = RandomForestRegressor()
-forest_reg.fit(train_data_prepared, train_labels)
+arg1 = sys.argv[1] # "test" or "validate"
+forest_reg = AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=200,
+                               learning_rate=0.8)
+if arg1 == "test":
+    forest_reg.fit(full_data_prepared, housing_labels)
 
-# Test on validation set
-predictions = forest_reg.predict(valid_data_prepared)
+    # Load and transform the test data
+    test_housing = pd.read_csv("data/test.csv")
+    test_housing = fix_na_values(test_housing)
+    test_housing = quantify_ordinals(test_housing)
+    test_data = test_housing[all_attrs].copy()
+    test_data_prepared = full_pipeline.transform(test_data)
+    predictions = forest_reg.predict(test_data_prepared)
+    with open("data/output.csv", "w", newline='') as output_file:
+        csv_writer = csv.writer(output_file, delimiter=",")
+        csv_writer.writerow(["Id", "SalePrice"])
+        house_id = 1461
+        for p in predictions:
+            row = [house_id, float(p)]
+            csv_writer.writerow(row)
+            house_id += 1
+elif arg1 == "validate":
+    forest_reg.fit(train_data_prepared, train_labels)
 
-# MSLE throws an error if there are negative values
-for i in range(len(predictions)):
-    if predictions[i] < 0:
-        predictions[i] = 0
+    # Test on validation set
+    predictions = forest_reg.predict(valid_data_prepared)
 
-# Evaluate root-mean-squared-log-error
-lin_msle = mean_squared_log_error(valid_labels, predictions)
-lin_rmsle = np.sqrt(lin_msle)
-print("RMSLE for validation data: ", lin_rmsle)
+    # MSLE throws an error if there are negative values
+    for i in range(len(predictions)):
+        if predictions[i] < 0:
+            predictions[i] = 0
 
-# Load and transform the test data
-test_housing = pd.read_csv("data/test.csv")
-test_housing = fix_na_values(test_housing)
-test_housing = quantify_ordinals(test_housing)
-test_data = test_housing[all_attrs].copy()
-test_data_prepared = full_pipeline.transform(test_data)
-predictions = forest_reg.predict(test_data_prepared)
-with open("data/output.csv", "w", newline='') as output_file:
-    csv_writer = csv.writer(output_file, delimiter=",")
-    csv_writer.writerow(["Id", "SalePrice"])
-    house_id = 1461
-    for p in predictions:
-        row = [house_id, float(p)]
-        csv_writer.writerow(row)
-        house_id += 1
+    # Evaluate root-mean-squared-log-error
+    lin_msle = mean_squared_log_error(valid_labels, predictions)
+    lin_rmsle = np.sqrt(lin_msle)
+    print("RMSLE for validation data: ", lin_rmsle)
+
