@@ -3,13 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
-from sklearn.ensemble import AdaBoostRegressor
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_log_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -217,7 +211,8 @@ class CombineAttribute (BaseEstimator, TransformerMixin):
         return np.c_[X_cp, total_sqft]
 
 # Apply transformation pipelines
-num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median"))])
+num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
+                         ("std_scaler", StandardScaler())])
 cat_pipeline = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
                          ("encoder", OneHotEncoder(handle_unknown="ignore"))])
 full_pipeline = ColumnTransformer([("num", num_pipeline, num_attrs + ord_attrs),
