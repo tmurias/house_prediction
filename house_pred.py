@@ -9,9 +9,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVR
 from sklearn.base import BaseEstimator, TransformerMixin
 from xgboost import XGBRegressor
+
 
 def fix_na_values(housing):
     h = housing.copy()
@@ -26,23 +26,24 @@ def fix_na_values(housing):
     h["MiscFeature"] = h["MiscFeature"].replace([0], "None")
     return h
 
+
 def quantify_ordinals(housing):
     h = housing.copy()
     h["ExterQual"] = h["ExterQual"].replace(["Ex"], 5)\
-                                               .replace(["Gd"], 4)\
-                                               .replace(["TA"], 3)\
-                                               .replace(["Fa"], 2)\
-                                               .replace(["Po"], 1)
+                                   .replace(["Gd"], 4)\
+                                   .replace(["TA"], 3)\
+                                   .replace(["Fa"], 2)\
+                                   .replace(["Po"], 1)
     h["ExterCond"] = h["ExterCond"].replace(["Ex"], 5)\
-                                               .replace(["Gd"], 4)\
-                                               .replace(["TA"], 3)\
-                                               .replace(["Fa"], 2)\
-                                               .replace(["Po"], 1)
+                                   .replace(["Gd"], 4)\
+                                   .replace(["TA"], 3)\
+                                   .replace(["Fa"], 2)\
+                                   .replace(["Po"], 1)
     h["BsmtQual"] = h["BsmtQual"].replace(["Ex"], 5)\
-                                             .replace(["Gd"], 4)\
-                                             .replace(["TA"], 3)\
-                                             .replace(["Fa"], 2)\
-                                             .replace(["Po"], 1)
+                                 .replace(["Gd"], 4)\
+                                 .replace(["TA"], 3)\
+                                 .replace(["Fa"], 2)\
+                                 .replace(["Po"], 1)
     h["BsmtCond"] = h["BsmtCond"].replace(["Ex"], 5)\
                                  .replace(["Gd"], 4)\
                                  .replace(["TA"], 3)\
@@ -183,33 +184,6 @@ train_labels = train_set["SalePrice"].copy()
 valid_data = valid_set[all_attrs].copy()
 valid_labels = valid_set["SalePrice"].copy()
 
-class CombineAttribute (BaseEstimator, TransformerMixin):
-
-    def __init__(self):
-        pass
-    def fit(self, X, y = None):
-        return self
-    def transform(self, X, y = None):
-        total_sqft = X[:,2] + X[:,6] + X[:,10] + X[:,20] + X[:,21] + X[:,22] + X[:,23] + X[:,24] + X[:,25] + X[:,26]
-        X_cp = X.copy()
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 1, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        X_cp = np.delete(X_cp, 10, 1)
-        return np.c_[X_cp, total_sqft]
-
 # Apply transformation pipelines
 num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")),
                          ("std_scaler", StandardScaler())])
@@ -222,7 +196,7 @@ train_data_prepared = full_pipeline.transform(train_data)
 valid_data_prepared = full_pipeline.transform(valid_data)
 
 # Train an xgboost regressor
-arg1 = sys.argv[1] # "test" or "validate"
+arg1 = sys.argv[1]  # "test" or "validate"
 boost_reg = XGBRegressor(max_depth=4, learning_rate=0.002, n_estimators=20000)
 
 if arg1 == "test":
