@@ -17,6 +17,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.base import BaseEstimator, TransformerMixin
+from xgboost import XGBRegressor
 
 def fix_na_values(housing):
     h = housing.copy()
@@ -225,12 +226,12 @@ full_data_prepared = full_pipeline.fit_transform(housing_data)
 train_data_prepared = full_pipeline.transform(train_data)
 valid_data_prepared = full_pipeline.transform(valid_data)
 
-# Train a random forest
+# Train an xgboost regressor
 arg1 = sys.argv[1] # "test" or "validate"
-forest_reg = AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=200,
-                               learning_rate=0.8)
+boost_reg = XGBRegressor(max_depth=4, learning_rate=0.002, n_estimators=20000)
+
 if arg1 == "test":
-    forest_reg.fit(full_data_prepared, housing_labels)
+    boost_reg.fit(full_data_prepared, housing_labels)
 
     # Load and transform the test data
     test_housing = pd.read_csv("data/test.csv")
@@ -238,7 +239,7 @@ if arg1 == "test":
     test_housing = quantify_ordinals(test_housing)
     test_data = test_housing[all_attrs].copy()
     test_data_prepared = full_pipeline.transform(test_data)
-    predictions = forest_reg.predict(test_data_prepared)
+    predictions = boost_reg.predict(test_data_prepared)
     with open("data/output.csv", "w", newline='') as output_file:
         csv_writer = csv.writer(output_file, delimiter=",")
         csv_writer.writerow(["Id", "SalePrice"])
@@ -248,10 +249,10 @@ if arg1 == "test":
             csv_writer.writerow(row)
             house_id += 1
 elif arg1 == "validate":
-    forest_reg.fit(train_data_prepared, train_labels)
+    boost_reg.fit(train_data_prepared, train_labels)
 
     # Test on validation set
-    predictions = forest_reg.predict(valid_data_prepared)
+    predictions = boost_reg.predict(valid_data_prepared)
 
     # MSLE throws an error if there are negative values
     for i in range(len(predictions)):
