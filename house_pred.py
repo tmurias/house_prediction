@@ -9,7 +9,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
-from sklearn.base import BaseEstimator, TransformerMixin
 from xgboost import XGBRegressor
 
 
@@ -232,4 +231,3 @@ elif arg1 == "validate":
     lin_msle = mean_squared_log_error(valid_labels, predictions)
     lin_rmsle = np.sqrt(lin_msle)
     print("RMSLE for validation data: ", lin_rmsle)
-
