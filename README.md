@@ -17,13 +17,18 @@ The script uses the following libraries (for Python 3):
 
 ## Running the prediction algorithm
 To run a validation check, which splits the training data into 80% training and 20% validation and then evaluates and prints the RMSLE for the validation results, run the following:
+
 `python3 house_pred.py validate`
+
 Running the validation check does not use the test data.
 
 To evaluate the test data and generate the csv file for submission to Kaggle, run the following:
+
 `python3 house_pred.py test`
+
 This will generate `output.csv` in the `data/` directory.
 
 ## EDA script
 The script `eda.py` contains some functions for analyzing/interpreting the data. It can be run by commenting or uncommenting the function calls at the bottom of the script and running:
+
 `python3 eda.py`
