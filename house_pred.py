@@ -196,7 +196,7 @@ valid_data_prepared = full_pipeline.transform(valid_data)
 
 # Train an xgboost regressor
 arg1 = sys.argv[1]  # "test" or "validate"
-boost_reg = XGBRegressor(max_depth=4, learning_rate=0.002, n_estimators=20000)
+boost_reg = XGBRegressor(max_depth=3, learning_rate=0.03, n_estimators=1000)
 
 if arg1 == "test":
     boost_reg.fit(full_data_prepared, housing_labels)
